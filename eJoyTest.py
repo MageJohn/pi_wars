@@ -1,4 +1,5 @@
-from evdev import list_devices, InputDevice, categorize, ecodes
+from evdev import InputDevice, categorize, ecodes, list_devices
+
 import RPi.GPIO as gpio
 
 gpio.setwarnings(False)
