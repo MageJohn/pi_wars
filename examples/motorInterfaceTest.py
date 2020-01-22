@@ -1,8 +1,7 @@
 from evdev import InputDevice, list_devices
 from smbus2 import SMBus
 
-from controller import Controller, Stick
-from drive_from_vector import drive_from_vector
+from pi_wars import Controller, Stick, drive_from_vector
 from yrk_oo.motors import MOTOR1, MOTOR2, MOTOR3, MOTOR4, MotorDriver, ecodes
 
 if __name__ == "__main__":
