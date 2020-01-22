@@ -1,6 +1,6 @@
 def drive_from_vector(x, y):
-    leftReturn = clamp(x+y, -1, 1)
-    rightReturn = clamp(x-y, -1, 1)
+    leftReturn = clamp(y+x, -1, 1)
+    rightReturn = clamp(y-x, -1, 1)
     return (leftReturn,rightReturn)
 
 def clamp(n, smallest, largest):
