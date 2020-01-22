@@ -9,10 +9,10 @@ if __name__ == "__main__":
     stick = Stick(ecodes.ABS_X, ecodes.ABS_Y, deadzone=0.1)
     controller = Controller(device, [stick])
     bus = SMBus(13)
-    m1 = MotorDriver(Motors.MOTOR1, bus)
-    m2 = MotorDriver(Motors.MOTOR4, bus)
-    m11 = MotorDriver(Motors.MOTOR2, bus)
-    m22 = MotorDriver(Motors.MOTOR3, bus)
+    m1 = MotorDriver(Motors.MOTOR1, bus, 0.1)
+    m2 = MotorDriver(Motors.MOTOR4, bus, 0.1)
+    m11 = MotorDriver(Motors.MOTOR2, bus, 0.1)
+    m22 = MotorDriver(Motors.MOTOR3, bus, 0.1)
 
     for _ in controller.read_loop():
         m1_v, m2_v = drive_from_vector(*stick.value)
