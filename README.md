@@ -6,9 +6,7 @@ Cambridge [0]
 
 ## Dependencies
 
-Install these from PyPA
-
-- evdev
-
-This code uses yrk_oo, a library for the York Robotics Kit. It is not in the
-PyPA, so install it from this repository: https://github.com/MageJohn/yrk-oo
+Use pipenv to install the dependencies; in a shell run `pipenv sync` to install
+them in a virtual environment, then use `pipenv run` to run something inside
+the environment or use `pipenv shell` to start a shell inside the virtual
+environment.
