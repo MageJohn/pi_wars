@@ -5,50 +5,61 @@
 // under certain conditions.        See GNU GPL v3.0.
 
 #include <Arduino.h>
+#include <Wire.h>
 
-#include "i2c.h"
-
-#define I2C_SLAVE_ADDRESS 0x58
-#define STEP_TIME 1
+#define I2C_SLAVE_ADDRESS (0x58)
+#define STEP_TIME (1000)
+#define N_SENSORS (4)
 
 unsigned long sensorTimerStart;
 
-const uint8_t analogInputs[6] = {A0, A1, A2, A3, A6, A7};
-const uint8_t emmitterPins[6] = {4, 5, 6, 7, 8, 9};
+const uint8_t analogInputs[] = {A0, A2, A3, A7};
+const uint8_t emmitterPins[] = {4, 6, 7, 9};
 
-uint16_t currentValues[6];
- 
+union Values {
+    uint16_t combined[N_SENSORS];
+    uint8_t low_high[N_SENSORS * 2];
+};
+
+union Values currentValues;
+
+
+void i2cRequestEvent() {
+    Wire.write(currentValues.low_high, N_SENSORS * 2);
+}
+
 void setup(void) {
     Serial.begin(9600);
     Serial.write("Hello World!");
 
     // Enable emitters
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < N_SENSORS; i++) {
             digitalWrite(emmitterPins[i], HIGH);
-            pinMode(emmitterPins[i], OUTPUT); 
+            pinMode(emmitterPins[i], OUTPUT);
     }
 
-    i2cInit(I2C_SLAVE_ADDRESS);
+    Wire.begin(I2C_SLAVE_ADDRESS);
+    Wire.onRequest(i2cRequestEvent);
 
-    sensorTimerStart = millis();
+    sensorTimerStart = micros();
 }
 
 void loop(void) {
     static uint8_t sensorStep = 0;
-    unsigned long sensorTime = millis() - sensorTimerStart;
+    unsigned long sensorTime = micros() - sensorTimerStart;
 
     if (sensorTime > STEP_TIME) {
-        currentValues[sensorStep] = 1023 -
+        currentValues.combined[sensorStep] = 1023 -
                                     analogRead(analogInputs[sensorStep]);
 
         //Turn off current emitter
         digitalWrite(emmitterPins[sensorStep], HIGH);
 
         //Enable next emitter
-        sensorStep = (sensorStep + 1) % 6;
+        sensorStep = (sensorStep + 1) % N_SENSORS;
 
         digitalWrite(emmitterPins[sensorStep], LOW);
 
-        sensorTimerStart = millis();
+        sensorTimerStart = micros();
     }
-} 
+}
