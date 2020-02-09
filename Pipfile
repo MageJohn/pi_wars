@@ -9,6 +9,8 @@ verify_ssl = true
 evdev = "*"
 smbus2 = "*"
 yrk-oo = {editable = true,git = "https://github.com/MageJohn/yrk-oo.git"}
+numpy = "*"
+opencv-python = "*"
 
 [requires]
 python_version = "3.8"
