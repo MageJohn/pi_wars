@@ -11,6 +11,8 @@ smbus2 = "*"
 yrk-oo = {editable = true,git = "https://github.com/MageJohn/yrk-oo.git"}
 numpy = "*"
 opencv-python = "*"
+cherrypy = "*"
+ws4py = "*"
 
 [requires]
 python_version = "3.8"

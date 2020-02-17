@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "67b90b5d4b7746a98d1b0e1e90b5a045873bfbb9f07fa09a18def8b7197bad58"
+            "sha256": "3de37c4296331ea3dab31afa1b6dadc747c358c5ecf74aed771e65bcffdc2f78"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,12 +16,62 @@
         ]
     },
     "default": {
+        "cheroot": {
+            "hashes": [
+                "sha256:2b48c88959b5b80a79aca627ae5212acb398becaa70b576b8b89bec1ad0d1367",
+                "sha256:a0577e1f28661727d472671a7cc4e0c12ea0cbc5220265e70f00a8b8cb628931"
+            ],
+            "version": "==8.3.0"
+        },
+        "cherrypy": {
+            "hashes": [
+                "sha256:26efbd146d6863c50db26abf549e776fbe552d5518cd98b74f854921fea87fd0",
+                "sha256:63b2f61c38c469112145bd4e4e2385cd18f3233799e7a33bd447df468916d22b"
+            ],
+            "index": "pypi",
+            "version": "==18.5.0"
+        },
         "evdev": {
             "hashes": [
                 "sha256:b1c649b4fed7252711011da235782b2c260b32e004058d62473471e5cd30634d"
             ],
             "index": "pypi",
             "version": "==1.3.0"
+        },
+        "jaraco.classes": {
+            "hashes": [
+                "sha256:116429c2047953f525afdcae165475c4589c7b14870e78b2d068ecb01018827e",
+                "sha256:c38698ff8ef932eb33d91c0e8fc192ad7c44ecee03f7f585afd4f35aeaef7aab"
+            ],
+            "version": "==3.1.0"
+        },
+        "jaraco.collections": {
+            "hashes": [
+                "sha256:a7889f28c80c4875bd6256d9924e8526dacfef22cd7b80ff8469b4d312f9f144",
+                "sha256:be570ef4f2e7290b757449395238fa63d70a9255574624e73c5ff9f1ee554721"
+            ],
+            "version": "==3.0.0"
+        },
+        "jaraco.functools": {
+            "hashes": [
+                "sha256:1db5ed25d8bb6cafc48b1c575743e1b4847a5ca7fca72497e89723832aa52529",
+                "sha256:5cb0eea0f254584241c519641328a4d4ec2001a86c3cd6d17a8fd228493f6d97"
+            ],
+            "version": "==3.0.0"
+        },
+        "jaraco.text": {
+            "hashes": [
+                "sha256:c87569c9afae14f71b2e1c57f316770ab6981ab675d9c602be1c7981161bacdd",
+                "sha256:e5078b1126cc0f166c7859aa75103a56c0d0f39ebcafc21695615472e0f810ec"
+            ],
+            "version": "==3.2.0"
+        },
+        "more-itertools": {
+            "hashes": [
+                "sha256:5dd8bcf33e5f9513ffa06d5ad33d78f31e1931ac9a18f33d37e77a180d393a7c",
+                "sha256:b1ddb932186d8a6ac451e1d95844b382f55e12686d51ca0c68b6f61f2ab7a507"
+            ],
+            "version": "==8.2.0"
         },
         "numpy": {
             "hashes": [
@@ -83,6 +133,27 @@
             "index": "pypi",
             "version": "==4.2.0.32"
         },
+        "portend": {
+            "hashes": [
+                "sha256:600dd54175e17e9347e5f3d4217aa8bcf4bf4fa5ffbc4df034e5ec1ba7cdaff5",
+                "sha256:62dd00b94a6a55fbf0320365fbdeba37f0d1fe14d613841037dc4780bedfda8f"
+            ],
+            "version": "==2.6"
+        },
+        "pytz": {
+            "hashes": [
+                "sha256:1c557d7d0e871de1f5ccd5833f60fb2550652da6be2693c1e02300743d21500d",
+                "sha256:b02c06db6cf09c12dd25137e563b31700d3b80fcc4ad23abb7a315f2789819be"
+            ],
+            "version": "==2019.3"
+        },
+        "six": {
+            "hashes": [
+                "sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a",
+                "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"
+            ],
+            "version": "==1.14.0"
+        },
         "smbus2": {
             "hashes": [
                 "sha256:210e66eebe4d0b1fe836b3ec2751841942e1c4918c0b429b20a0e20a222228b4"
@@ -90,10 +161,31 @@
             "index": "pypi",
             "version": "==0.3.0"
         },
+        "tempora": {
+            "hashes": [
+                "sha256:540780d3a0ed431c21d1b901db38d20111a1b6f4d247099d25373d223ea05fc2",
+                "sha256:61287665ed38bb86a3f4293de5c7613c56b525f9db2ec099d794b9c97f7d5e54"
+            ],
+            "version": "==2.1.0"
+        },
+        "ws4py": {
+            "hashes": [
+                "sha256:29d073d7f2e006373e6a848b1d00951a1107eb81f3742952be905429dc5a5483"
+            ],
+            "index": "pypi",
+            "version": "==0.5.1"
+        },
         "yrk-oo": {
             "editable": true,
             "git": "https://github.com/MageJohn/yrk-oo.git",
             "ref": "141cd808b5b86421321240fa2b29582af2acb69d"
+        },
+        "zc.lockfile": {
+            "hashes": [
+                "sha256:307ad78227e48be260e64896ec8886edc7eae22d8ec53e4d528ab5537a83203b",
+                "sha256:cc33599b549f0c8a248cb72f3bf32d77712de1ff7ee8814312eb6456b42c015f"
+            ],
+            "version": "==2.0"
         }
     },
     "develop": {}
