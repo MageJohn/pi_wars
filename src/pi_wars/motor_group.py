@@ -1,4 +1,6 @@
 from yrk_oo.motors import MotorDriver, Motors
+
+
 class MotorGroup:
     def __init__(self, bus):
         m1 = MotorDriver(Motors.MOTOR1, bus, 0.1)
@@ -19,4 +21,3 @@ class MotorGroup:
         for ml, mr in zip(self.left, self.right):
             ml.brake()
             mr.brake()
-

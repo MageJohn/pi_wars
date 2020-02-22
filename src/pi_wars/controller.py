@@ -28,10 +28,16 @@ class Controller:
 
     def read_loop(self):
         for event in self.device.read_loop():
-            handler = self.mapped_events.get((event.type, event.code))
-            if handler is not None:
-                handler.handle_event(event)
-                yield True
+            return self._handle_event(event)
+
+    def read_one(self):
+        return self._handle_event(self.device.read_one())
+
+    def _handle_event(self, event):
+        handler = self.mapped_events.get((event.type, event.code))
+        if handler is not None:
+            handler.handle_event(event)
+            return True
 
 
 if __name__ == "__main__":
