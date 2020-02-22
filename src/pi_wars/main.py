@@ -17,6 +17,7 @@ import ffmpeg
 import cherrypy
 import picamera
 from annotated import annotated
+from ws4py import WebSocket
 
 from robot import Robot
 from modes import PS4ControllerMode
@@ -97,10 +98,10 @@ if __name__ == "__main__":
         webapp,
         "/",
         config={
-            "/": {"tools.staticdir.root": os.path.abspath(os.getcwd())},
-            "/ws": {
+            "/": {
+                "tools.staticdir.root": os.path.abspath(os.getcwd()),
                 "tools.websocket.on": True,
-                "tools.websocket.handler_cls": JSMPEGWebSocket,
+                "tools.websocket.handler_cls": WebSocket,
             },
             "/api": {"request.dispatch": cherrypy.dispatch.MethodDispatcher(),},
             "/static": {"tools.staticdir.on": True, "tools.staticdir.dir": "./website"},

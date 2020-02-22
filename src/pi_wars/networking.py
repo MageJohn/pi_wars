@@ -18,7 +18,6 @@ import cherrypy
 # TODO: Enable static file serving tool
 # TODO: Enable websocket tool
 
-GLOBAL_CONF = {}
 WIDTH = 640
 HEIGHT = 480
 JSMPEG_MAGIC = b'jsmp'
@@ -64,6 +63,7 @@ class RobotWebApp:
         pass
 
 
+cherrypy.config.update({'server.socket.socket_port': 9000})
 cherrypy.tools.websocket = WebSocketTool()
 websocket_plugin = WebSocketPlugin(cherrypy.engine)
 websocket_plugin.subscribe()
