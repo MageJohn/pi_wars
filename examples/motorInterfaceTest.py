@@ -1,7 +1,7 @@
 from evdev import InputDevice, list_devices, ecodes
 from smbus2 import SMBus
 
-from pi_wars import Controller, Stick, drive_from_vector
+from pi_wars import Controller, Stick, sam_drive_from_vector
 from yrk_oo.motors import Motors, MotorDriver
 
 if __name__ == "__main__":
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     m22 = MotorDriver(Motors.MOTOR3, bus, 0.1)
 
     for _ in controller.read_loop():
-        m1_v, m2_v = drive_from_vector(*stick.value)
+        m1_v, m2_v = sam_drive_from_vector.drive_from_vector(*stick.value)
         print(stick.value, m1_v, m2_v)
         m1.set(m1_v)
         m11.set(m1_v)
