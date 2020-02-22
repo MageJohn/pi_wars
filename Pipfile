@@ -15,6 +15,3 @@ cherrypy = "*"
 ws4py = "*"
 ffmpeg-python = "*"
 annotated = "*"
-
-[requires]
-python_version = "3.8"
