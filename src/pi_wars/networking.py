@@ -47,9 +47,12 @@ class RobotStateAPI:
     @cherrypy.tools.json_in()
     def POST(self):
         json = cherrypy.request.json
-        if json.get('active_mode'):
+        cherrypy.engine.log(f"Recieved json {json}")
+        if 'active_mode' in json.keys():
+            cherrypy.engine.log(f"Setting the active mode to {json['active_mode']}")
             self.robot.change_mode(json['active_mode'])
-        if json.get('stream_source'):
+        if 'stream_source' in json.keys():
+            cherrypy.engine.log(f"Setting the stream source to {json['stream_source']}")
             self.stream_mux.active_in = json['stream_source']
 
 
@@ -63,14 +66,9 @@ class RobotWebApp:
         pass
 
 
-cherrypy.config.update({'server.socket.socket_port': 9000})
 cherrypy.tools.websocket = WebSocketTool()
 websocket_plugin = WebSocketPlugin(cherrypy.engine)
 websocket_plugin.subscribe()
-websocket_manager = websocket_plugin.manager
-del websocket_plugin
-# Only the manager is needed, so remove the binding to the plugin
-# The plugin is still subscribed in the background
 
 
 class JSMPEGWebSocket(WebSocket):
@@ -79,22 +77,17 @@ class JSMPEGWebSocket(WebSocket):
 
 
 class StreamBroadcaster(Thread):
-    def __init__(self, stream, websocket_manager):
-        super().__init__()
+    def __init__(self, stream, websockets):
+        super().__init__(daemon=True, name="StreamBroadcaster")
         self.stream = stream
-        self.websocket_manager = websocket_manager
-        self.running = True
+        self.websockets = websockets
 
     def run(self):
-        while self.running:
-            buf = self.stream.read1(32768)
-            if buf:
-                self.websocket_manager.broadcast(buf, binary=True)
-        for stream in self.streams.values():
-            stream.close()
-
-    def stop(self):
-        self.running = False
-
-    def start(self):
-        super().start()
+        try:
+            while True:
+                buf = self.stream.read1(32768)
+                self.websockets.broadcast(buf, binary=True)
+        except ValueError:
+            pass
+        finally:
+            self.stream.close()

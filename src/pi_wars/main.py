@@ -1,60 +1,48 @@
 #!/usr/bin/env python3
 
-# TODO: Init:
-# - [ ] Pipes
-# - [ ] Networking process
-# - [ ] Controller process
-# - [ ] Image processing process
-# - [ ] Robot settings server process
-# - [ ] ffmpeg process
-#
-# Hook them all together, start them, then wait for them to finish.
-
 import os
 import os.path
+from threading import Thread
 
 import ffmpeg
 import cherrypy
 import picamera
 from annotated import annotated
-from ws4py import WebSocket
+from ws4py.websocket import WebSocket
 
 from robot import Robot
-from modes import PS4ControllerMode
+from ps4_controller import PS4ControllerMode
 from networking import (
     StreamBroadcaster,
     JSMPEGWebSocket,
-    websocket_manager,
+    websocket_plugin,
     RobotWebApp,
     RobotStateAPI,
 )
 
 
-def start_ffmpeg(bitrate):
-    return (
-        ffmpeg.input("pipe:", format="rawvideo", pix_fmt="bgr24")
-        .output("pipe:", format="mpeg1video", video_bitrate=bitrate)
-        .run_async(pipe_stdin=True, pipe_stdout=True)
-    )
-
-
 class IoMuxer:
-    """Provide a number of inputs and only and allow choosing which one gets to
+    """Provide a number of inputs and allow choosing which one gets to
     output"""
 
-    def __init__(self, output, n_inputs):
+    def __init__(self, n_inputs=2, output=None):
         self.output = output
-        self.inputs = [self.Input() for i in range(n_inputs)]
+        self.inputs = [self.Input(self) for i in range(n_inputs)]
         self._active_in = self.inputs[0]
 
     @property
     def active_in(self):
-        return self._active_in
+        return self.inputs.index(self._active_in)
 
     @active_in.setter
     @annotated
     def active_in(self, value: int):
-        self._active_in = value
+        self._active_in = self.inputs[value]
+
+    def add_input(self):
+        """Add an input and return it's index"""
+        self.inputs.append(self.Input(self))
+        return len(self.inputs) - 1
 
     class Input:
         def __init__(self, parent):
@@ -64,24 +52,55 @@ class IoMuxer:
             return self.parent._write(buf, self)
 
         def flush(self):
-            self.parent._flush(self)
+            self.parent._flush()
 
     def _write(self, buf, source):
-        if source is self.active_in:
-            return self.output.write(buf)
+        if self.output is None or source is not self._active_in:
+            return len(buf)
         else:
-            return 0
+            return self.output.write(buf)
 
-    def _flush(self, source):
-        if source is self.active_in:
-            self.output.flush()
+    def _flush(self):
+        self.output.flush()
+
+
+class Converter:
+    def __init__(self, camera):
+        ffmpeg_cmd = (
+            ffmpeg.input(
+                "pipe:",
+                format="rawvideo",
+                pix_fmt="bgr24",
+                s=f"{camera.resolution[0]}x{camera.resolution[1]}",
+                r=str(float(camera.framerate))
+            )
+            .output(
+                "pipe:", 
+                format="mpegts",
+                vcodec="mpeg1video",
+                video_bitrate="1000k",
+                bf=0,
+                r=str(float(camera.framerate)),
+                s=f"{camera.resolution[0]}x{camera.resolution[1]}"
+            )
+        )
+        cherrypy.engine.log(f"Starting ffmpeg with cmdline: \nffmpeg {' '.join(ffmpeg.get_args(ffmpeg_cmd))}")
+        self.converter = ffmpeg_cmd.run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+    
+    def write(self, buf):
+        return self.converter.stdin.write(buf)
+
+    def flush(self):
+        cherrypy.engine.log("Waiting for ffmpeg to finish")
+        self.converter.communicate()
 
 
 if __name__ == "__main__":
-    camera = picamera.PiCamera(resolution=(640, 480), framerate=24)
-    ffmpeg_proc = start_ffmpeg(bitrate=800)
-    io_mux = IoMuxer(ffmpeg_proc.stdin, 2)
-    camera.start_recording(output=io_mux.inputs[0], format="bgr", splitter_port=0)
+    camera = picamera.PiCamera(resolution=(640, 480), framerate=30)
+    cherrypy.engine.log("Opened camera")
+
+    io_mux = IoMuxer()
+    cherrypy.engine.log("Created IoMuxer")
 
     robot = Robot(
         modes={
@@ -90,34 +109,65 @@ if __name__ == "__main__":
             ),
         }
     )
+    cherrypy.engine.log("Created robot")
+
+    cherrypy.config.update({'server.socket_host': '0.0.0.0'})
 
     webapp = RobotWebApp()
     webapp.api = RobotStateAPI(robot, io_mux)
 
-    cherrypy.tree.mount(
-        webapp,
-        "/",
-        config={
-            "/": {
-                "tools.staticdir.root": os.path.abspath(os.getcwd()),
-                "tools.websocket.on": True,
-                "tools.websocket.handler_cls": WebSocket,
+    server_thread = Thread(
+            target=cherrypy.quickstart, 
+            args=(webapp, ""),
+            kwargs={
+                "config":{
+                    "/": {
+                        "tools.staticdir.root": os.path.abspath(os.getcwd()),
+                        },
+                    "/ws": {
+                        "tools.websocket.on": True,
+                        "tools.websocket.handler_cls": WebSocket,
+                      },
+                    "/api": {"request.dispatch": cherrypy.dispatch.MethodDispatcher(),},
+                    "/static": {"tools.staticdir.on": True, "tools.staticdir.dir": "./website"},
+                  },
             },
-            "/api": {"request.dispatch": cherrypy.dispatch.MethodDispatcher(),},
-            "/static": {"tools.staticdir.on": True, "tools.staticdir.dir": "./website"},
-        },
+            daemon=True, name="cherrypy",
     )
+    cherrypy.engine.log("Initialised cherrypy thread")
+
+    video_converter = Converter(camera)
+    io_mux.output = video_converter
 
     stream_broadcaster = StreamBroadcaster(
-        ffmpeg_proc.stdout, websocket_manager
-    ).start()
+        video_converter.converter.stdout, websocket_plugin
+    )
+    cherrypy.engine.log("Initialised stream broadcaster")
+
+    camera.start_recording(output=io_mux.inputs[0], format="bgr")
+    cherrypy.engine.log("Started camera recording")
 
     robot.change_mode("ps4_controller")
+    cherrypy.engine.log("Set default robot mode")
 
-    cherrypy.start()
+    io_mux.active_in = 0
+
     try:
-        cherrypy.block()
+        cherrypy.engine.log("Starting cherrypy thread")
+        server_thread.start()
+        cherrypy.engine.log("Starting stream broadcaster")
+        stream_broadcaster.start()
+        while True:
+            camera.wait_recording(1)
+    except KeyboardInterrupt:
+        pass
     finally:
-        robot.stop()
+        cherrypy.engine.log("Stopping recording")
+        camera.stop_recording()
+        cherrypy.engine.log("Waiting for stream broadcaster to finish")
+        stream_broadcaster.join()
+        cherrypy.engine.log("Shutting down cherrypy")
+        cherrypy.engine.exit()
+        server_thread.join()
+        cherrypy.engine.log("Closing camera")
         camera.close()
-        ffmpeg_proc.terminate()

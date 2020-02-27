@@ -28,10 +28,12 @@ class Controller:
 
     def read_loop(self):
         for event in self.device.read_loop():
-            return self._handle_event(event)
+            yield self._handle_event(event)
 
     def read_one(self):
-        return self._handle_event(self.device.read_one())
+        event = self.device.read_one()
+        if event is not None:
+            return self._handle_event(event)
 
     def _handle_event(self, event):
         handler = self.mapped_events.get((event.type, event.code))

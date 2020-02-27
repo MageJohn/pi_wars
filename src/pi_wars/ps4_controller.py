@@ -9,17 +9,20 @@ from annotated import annotated
 from smbus2 import SMBus
 from picamera.array import PiRGBAnalysis
 
-from .. import Controller, Stick, MotorGroup, drive_from_vector
+from controller import Controller, Stick
+from motor_group import MotorGroup
+from drive_from_vector import drive_from_vector
 
-I2C_BUS = 11
+I2C_BUS = 13
 
 
 class PS4ControllerMode(Thread):
-    def __init__(self, camera, debug_stream, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, camera, debug_stream):
+        super().__init__(name=type(self).__name__)
         self.debug_stream = debug_stream
         self.camera = camera
-        self.running = True
+        self.running = False
+        self.left_stick = Stick(ecodes.ABS_X, ecodes.ABS_Y)
 
     @property
     def deadzone(self):
@@ -34,26 +37,31 @@ class PS4ControllerMode(Thread):
             raise ValueError(f"{value} is not a float in the range 0 <= deadzone <= 1")
 
     def run(self):
+        self.running = True
+        print(f"{self.name} started running")
         dev = InputDevice(list_devices()[0])
         controller = Controller(dev, [self.left_stick])
-        left_stick = Stick(ecodes.ABS_X, ecodes.ABS_Y)
         bus = SMBus(I2C_BUS)
         motors = MotorGroup(bus)
+        print(f"{self.name} finished initialising")
         try:
             self.camera.start_recording(
-                output=StickOverlayer(self.camera, left_stick, self.debug_stream),
+                output=StickOverlayer(self.camera, self.left_stick, self.debug_stream),
                 format='bgr',
-                splitter_port=1
+                splitter_port=3
             )
+            print(f"{self.name} started the camera")
             while self.running:
-                controller.read_one()
-                left, right = drive_from_vector(*left_stick.value)
-                motors.set(left, right)
+                if controller.read_one():
+                    left, right = drive_from_vector(*self.left_stick.value)
+                    motors.set(left, right)
+            print(f"{self.name} stopping")
         finally:
-            self.bus.close()
-            self.camera.stop_recording()
+            bus.close()
+            self.camera.stop_recording(splitter_port=3)
 
     def join(self):
+        print(f"Trying to stop {self.name}")
         self.running = False
         super().join()
 
@@ -72,14 +80,14 @@ class StickOverlayer(PiRGBAnalysis):
         circle_r = int(frame.shape[0] / 6)
         circle_pos = (
             self.border + circle_r,
-            frame.shape[1] - (self.border + circle_r),
+            frame.shape[0] - (self.border + circle_r),
         )
 
         cv2.circle(frame, circle_pos, circle_r, self.colour, 5, cv2.LINE_AA)
 
         centre_r = int(circle_r / 5)
-        centre_pos = (np.array(self.stick.value) * circle_r + circle_pos).astype(int)
+        centre_pos = tuple((np.array(self.stick.value) * circle_r + circle_pos).astype(int))
 
-        self.output.write(
-            cv2.circle(frame, centre_pos, centre_r, self.colour, -1,)
-        )
+        cv2.circle(frame, centre_pos, centre_r, self.colour, -1)
+
+        self.output.write(frame.data)
