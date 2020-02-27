@@ -8,10 +8,14 @@ verify_ssl = true
 [packages]
 evdev = "*"
 smbus2 = "*"
-yrk-oo = {editable = true,git = "https://github.com/MageJohn/yrk-oo.git"}
 numpy = "*"
-opencv-python = "*"
 cherrypy = "*"
 ws4py = "*"
 ffmpeg-python = "*"
 annotated = "*"
+picamera = "*"
+opencv-python = "<=4"
+
+[packages.yrk-oo]
+editable = true
+git = "https://github.com/MageJohn/yrk-oo.git"
