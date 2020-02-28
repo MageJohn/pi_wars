@@ -12,6 +12,7 @@ from ws4py.websocket import WebSocket
 
 from robot import Robot
 from ps4_controller import PS4ControllerMode
+from drive_to_colour import DriveToColour
 from networking import (
     StreamBroadcaster,
     JSMPEGWebSocket,
@@ -107,6 +108,9 @@ if __name__ == "__main__":
             "ps4_controller": PS4ControllerMode(
                 camera, io_mux.inputs[1]
             ),
+            "drive_to_colour": DriveToColour(
+                camera, io_mux.inputs[1]
+            ),
         }
     )
     cherrypy.engine.log("Created robot")
@@ -147,10 +151,10 @@ if __name__ == "__main__":
     camera.start_recording(output=io_mux.inputs[0], format="bgr")
     cherrypy.engine.log("Started camera recording")
 
-    robot.change_mode("ps4_controller")
+    robot.change_mode("drive_to_colour")
     cherrypy.engine.log("Set default robot mode")
 
-    io_mux.active_in = 0
+    io_mux.active_in = 1
 
     try:
         cherrypy.engine.log("Starting cherrypy thread")
