@@ -120,11 +120,8 @@ if __name__ == "__main__":
     webapp = RobotWebApp()
     webapp.api = RobotStateAPI(robot, io_mux)
 
-    server_thread = Thread(
-            target=cherrypy.quickstart, 
-            args=(webapp, ""),
-            kwargs={
-                "config":{
+    cherrypy.tree.mount(webapp, "",
+                config={
                     "/": {
                         "tools.staticdir.root": os.path.abspath(os.getcwd()),
                         },
@@ -135,10 +132,8 @@ if __name__ == "__main__":
                     "/api": {"request.dispatch": cherrypy.dispatch.MethodDispatcher(),},
                     "/static": {"tools.staticdir.on": True, "tools.staticdir.dir": "./website"},
                   },
-            },
-            daemon=True, name="cherrypy",
     )
-    cherrypy.engine.log("Initialised cherrypy thread")
+    cherrypy.engine.log("Initialised cherrypy tree")
 
     video_converter = Converter(camera)
     io_mux.output = video_converter
@@ -157,12 +152,11 @@ if __name__ == "__main__":
     io_mux.active_in = 1
 
     try:
-        cherrypy.engine.log("Starting cherrypy thread")
-        server_thread.start()
+        cherrypy.engine.log("Starting cherrypy")
+        cherrypy.engine.start()
         cherrypy.engine.log("Starting stream broadcaster")
         stream_broadcaster.start()
-        while True:
-            camera.wait_recording(1)
+        cherrypy.engine.block()
     except KeyboardInterrupt:
         pass
     finally:
@@ -172,6 +166,5 @@ if __name__ == "__main__":
         stream_broadcaster.join()
         cherrypy.engine.log("Shutting down cherrypy")
         cherrypy.engine.exit()
-        server_thread.join()
         cherrypy.engine.log("Closing camera")
         camera.close()
