@@ -142,8 +142,8 @@ if __name__ == "__main__":
     #)
     #cherrypy.engine.log("Initialised stream broadcaster")
 
-    camera.start_recording(output=io_mux.inputs[0], format="bgr")
-    cherrypy.engine.log("Started camera recording")
+    #camera.start_recording(output=io_mux.inputs[0], format="bgr")
+    #cherrypy.engine.log("Started camera recording")
 
     robot.change_mode("drive_to_colour")
     cherrypy.engine.log("Set default robot mode")
@@ -159,8 +159,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     finally:
-        cherrypy.engine.log("Stopping recording")
-        camera.stop_recording()
+        #cherrypy.engine.log("Stopping recording")
+        #camera.stop_recording()
         #cherrypy.engine.log("Waiting for stream broadcaster to finish")
         #stream_broadcaster.join()
         cherrypy.engine.log("Shutting down cherrypy")
