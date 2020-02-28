@@ -76,7 +76,7 @@ class Converter:
                 r=str(float(camera.framerate))
             )
             .output(
-                "pipe:", 
+                "http://localhost:8081/websocketrelay", 
                 format="mpegts",
                 vcodec="mpeg1video",
                 video_bitrate="1000k",
@@ -138,10 +138,10 @@ if __name__ == "__main__":
     video_converter = Converter(camera)
     io_mux.output = video_converter
 
-    stream_broadcaster = StreamBroadcaster(
-        video_converter.converter.stdout, websocket_plugin
-    )
-    cherrypy.engine.log("Initialised stream broadcaster")
+    #stream_broadcaster = StreamBroadcaster(
+    #    video_converter.converter.stdout, websocket_plugin
+    #)
+    #cherrypy.engine.log("Initialised stream broadcaster")
 
     camera.start_recording(output=io_mux.inputs[0], format="bgr")
     cherrypy.engine.log("Started camera recording")
@@ -154,16 +154,16 @@ if __name__ == "__main__":
     try:
         cherrypy.engine.log("Starting cherrypy")
         cherrypy.engine.start()
-        cherrypy.engine.log("Starting stream broadcaster")
-        stream_broadcaster.start()
+        #cherrypy.engine.log("Starting stream broadcaster")
+        #stream_broadcaster.start()
         cherrypy.engine.block()
     except KeyboardInterrupt:
         pass
     finally:
         cherrypy.engine.log("Stopping recording")
         camera.stop_recording()
-        cherrypy.engine.log("Waiting for stream broadcaster to finish")
-        stream_broadcaster.join()
+        #cherrypy.engine.log("Waiting for stream broadcaster to finish")
+        #stream_broadcaster.join()
         cherrypy.engine.log("Shutting down cherrypy")
         cherrypy.engine.exit()
         cherrypy.engine.log("Closing camera")
