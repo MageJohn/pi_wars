@@ -1,5 +1,6 @@
 class LuxSensor:
     def __init__(self, bus):
+        self.bus = bus
         bus.write_byte_data(0x39, (0x00 | 0x80), 0x03)
         bus.write_byte_data(0x39, (0x01 | 0x80), 0x02) 
 
@@ -13,7 +14,7 @@ class LuxSensor:
     def calibrate(self, sensitivity):
         visible = []
         for i in range(sensitivity):
-            visible.append(read_lux())
+            visible.append(self.read())
         visible = sum(visible)/sensitivity  
         return visible
 
