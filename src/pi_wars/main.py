@@ -15,7 +15,6 @@ from ps4_controller import PS4ControllerMode
 from drive_to_colour import DriveToColour
 from networking import (
     StreamBroadcaster,
-    JSMPEGWebSocket,
     websocket_plugin,
     RobotWebApp,
     RobotStateAPI,

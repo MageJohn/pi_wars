@@ -3,7 +3,6 @@
 from struct import Struct
 from threading import Thread
 
-from ws4py.websocket import WebSocket
 from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
 
 import cherrypy
@@ -69,11 +68,6 @@ class RobotWebApp:
 cherrypy.tools.websocket = WebSocketTool()
 websocket_plugin = WebSocketPlugin(cherrypy.engine)
 websocket_plugin.subscribe()
-
-
-class JSMPEGWebSocket(WebSocket):
-    def opened(self):
-        self.send(JSMPEG_HEADER.pack(JSMPEG_MAGIC, WIDTH, HEIGHT), binary=True)
 
 
 class StreamBroadcaster(Thread):
