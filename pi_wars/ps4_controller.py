@@ -38,56 +38,22 @@ class PS4ControllerMode(Thread):
 
     def run(self):
         self.running = True
-        print(f"{self.name} started running")
         dev = InputDevice(list_devices()[0])
         controller = Controller(dev, [self.left_stick])
         bus = SMBus(I2C_BUS)
         motors = MotorGroup(bus)
-        print(f"{self.name} finished initialising")
+
         try:
-            self.camera.start_recording(
-                output=StickOverlayer(self.camera, self.left_stick, self.debug_stream),
-                format='bgr',
-                splitter_port=3
-            )
-            print(f"{self.name} started the camera")
             while self.running:
                 if controller.read_one():
                     left, right = drive_from_vector(*self.left_stick.value)
                     motors.set(left, right)
             print(f"{self.name} stopping")
         finally:
+            motors.set(0, 0)
             bus.close()
-            self.camera.stop_recording(splitter_port=3)
 
     def join(self):
-        print(f"Trying to stop {self.name}")
         self.running = False
         super().join()
 
-
-class StickOverlayer(PiRGBAnalysis):
-    border = 20
-    thickness = 10
-    colour = (75, 224, 113)
-
-    def __init__(self, camera, stick, output):
-        super().__init__(camera)
-        self.stick = stick
-        self.output = output
-
-    def analyze(self, frame):
-        circle_r = int(frame.shape[0] / 6)
-        circle_pos = (
-            self.border + circle_r,
-            frame.shape[0] - (self.border + circle_r),
-        )
-
-        cv2.circle(frame, circle_pos, circle_r, self.colour, 5, cv2.LINE_AA)
-
-        centre_r = int(circle_r / 5)
-        centre_pos = tuple((np.array(self.stick.value) * circle_r + circle_pos).astype(int))
-
-        cv2.circle(frame, centre_pos, centre_r, self.colour, -1)
-
-        self.output.write(frame.data)
