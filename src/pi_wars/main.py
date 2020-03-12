@@ -12,9 +12,9 @@ from ws4py.websocket import WebSocket
 
 from robot import Robot
 from ps4_controller import PS4ControllerMode
+from drive_to_colour import DriveToColour
 from networking import (
     StreamBroadcaster,
-    JSMPEGWebSocket,
     websocket_plugin,
     RobotWebApp,
     RobotStateAPI,
@@ -75,7 +75,7 @@ class Converter:
                 r=str(float(camera.framerate))
             )
             .output(
-                "pipe:", 
+                "http://localhost:8081/websocketrelay", 
                 format="mpegts",
                 vcodec="mpeg1video",
                 video_bitrate="1000k",
@@ -107,6 +107,9 @@ if __name__ == "__main__":
             "ps4_controller": PS4ControllerMode(
                 camera, io_mux.inputs[1]
             ),
+            "drive_to_colour": DriveToColour(
+                camera, io_mux.inputs[1]
+            ),
         }
     )
     cherrypy.engine.log("Created robot")
@@ -116,11 +119,8 @@ if __name__ == "__main__":
     webapp = RobotWebApp()
     webapp.api = RobotStateAPI(robot, io_mux)
 
-    server_thread = Thread(
-            target=cherrypy.quickstart, 
-            args=(webapp, ""),
-            kwargs={
-                "config":{
+    cherrypy.tree.mount(webapp, "",
+                config={
                     "/": {
                         "tools.staticdir.root": os.path.abspath(os.getcwd()),
                         },
@@ -131,43 +131,39 @@ if __name__ == "__main__":
                     "/api": {"request.dispatch": cherrypy.dispatch.MethodDispatcher(),},
                     "/static": {"tools.staticdir.on": True, "tools.staticdir.dir": "./website"},
                   },
-            },
-            daemon=True, name="cherrypy",
     )
-    cherrypy.engine.log("Initialised cherrypy thread")
+    cherrypy.engine.log("Initialised cherrypy tree")
 
     video_converter = Converter(camera)
     io_mux.output = video_converter
 
-    stream_broadcaster = StreamBroadcaster(
-        video_converter.converter.stdout, websocket_plugin
-    )
-    cherrypy.engine.log("Initialised stream broadcaster")
+    #stream_broadcaster = StreamBroadcaster(
+    #    video_converter.converter.stdout, websocket_plugin
+    #)
+    #cherrypy.engine.log("Initialised stream broadcaster")
 
-    camera.start_recording(output=io_mux.inputs[0], format="bgr")
-    cherrypy.engine.log("Started camera recording")
+    #camera.start_recording(output=io_mux.inputs[0], format="bgr")
+    #cherrypy.engine.log("Started camera recording")
 
-    robot.change_mode("ps4_controller")
+    robot.change_mode("drive_to_colour")
     cherrypy.engine.log("Set default robot mode")
 
-    io_mux.active_in = 0
+    io_mux.active_in = 1
 
     try:
-        cherrypy.engine.log("Starting cherrypy thread")
-        server_thread.start()
-        cherrypy.engine.log("Starting stream broadcaster")
-        stream_broadcaster.start()
-        while True:
-            camera.wait_recording(1)
+        cherrypy.engine.log("Starting cherrypy")
+        cherrypy.engine.start()
+        #cherrypy.engine.log("Starting stream broadcaster")
+        #stream_broadcaster.start()
+        cherrypy.engine.block()
     except KeyboardInterrupt:
         pass
     finally:
-        cherrypy.engine.log("Stopping recording")
-        camera.stop_recording()
-        cherrypy.engine.log("Waiting for stream broadcaster to finish")
-        stream_broadcaster.join()
+        #cherrypy.engine.log("Stopping recording")
+        #camera.stop_recording()
+        #cherrypy.engine.log("Waiting for stream broadcaster to finish")
+        #stream_broadcaster.join()
         cherrypy.engine.log("Shutting down cherrypy")
         cherrypy.engine.exit()
-        server_thread.join()
         cherrypy.engine.log("Closing camera")
         camera.close()

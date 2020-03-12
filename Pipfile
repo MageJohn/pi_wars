@@ -15,6 +15,7 @@ ffmpeg-python = "*"
 annotated = "*"
 picamera = "*"
 opencv-python = "<=4"
+pillow = "*"
 
 [packages.yrk-oo]
 editable = true
