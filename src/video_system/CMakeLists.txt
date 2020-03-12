@@ -6,7 +6,7 @@ add_subdirectory(pybind11)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-pybind11_add_module(video_pipeline VideoPipeline.cpp Framerate.cpp)
+pybind11_add_module(video_pipeline bindings.cpp VideoPipeline.cpp Framerate.cpp)
 target_link_libraries(video_pipeline PRIVATE ${OpenCV_LIBS})
 
 add_executable(standalone_test StandaloneTest.cpp VideoPipeline.cpp Framerate.cpp)

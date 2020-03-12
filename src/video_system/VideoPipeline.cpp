@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string>
 
-#include <pybind11/pybind11.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 
@@ -36,7 +35,7 @@ double run() {
 
         putText(frame, 
                 "FPS: " + to_string(fps.fps),
-                Point(10, 30), CV_FONT_HERSHEY_SIMPLEX, 
+                Point(10, 30), FONT_HERSHEY_SIMPLEX, 
                 1, Scalar(255, 0, 0));
 
         imshow("Live", frame);
@@ -85,10 +84,4 @@ void process(Mat frame, Mat kernel, Scalar low, Scalar high) {
         drawContours(frame, contours, -1, Scalar(0, 255, 0));
 
     }
-}
-
-PYBIND11_MODULE(video_pipeline, m) {
-    m.doc() = "Test video pipeline in C++";
-
-    m.def("run", &run, "Run the pipeline, showing the output with OpenCV highgui");
 }

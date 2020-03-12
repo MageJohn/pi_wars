@@ -20,7 +20,7 @@ int main() {
     cap.read(frame);
     if (frame.empty()) {
         cerr << "ERROR: Blank frame grabbed";
-        break;
+	return -1;
     }
     process(frame, kernel, Scalar(-10, 50, 50), Scalar(10, 255, 255));
 
@@ -37,4 +37,5 @@ int main() {
     } else {
         cout << "Couldn't save to testout.jpg";
     }
+    return 1;
 }
